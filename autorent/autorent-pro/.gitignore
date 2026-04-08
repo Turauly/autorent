@@ -38,25 +38,11 @@ jspm_packages/
 .env.test.local
 .env.production.local
 .env.local
-backend/.env
-frontend/.env
-
-# Python
-.venv/
-__pycache__/
-.pytest_cache/
-.ruff_cache/
-*.pyc
-*.pyo
-*.pyd
 
 # Build outputs
 dist
 build
 out
-*.tsbuildinfo
-backend/dist/
-frontend/build/
 
 # Framework caches
 .cache
@@ -88,6 +74,14 @@ Thumbs.db
 # Docker
 docker-data/
 
+# Backend
+backend/dist/
+backend/.env
+
+# Frontend
+frontend/build/
+frontend/.env
+
 # Testing
 coverage/
 .nyc_output/
@@ -95,10 +89,3 @@ coverage/
 # Prisma
 backend/prisma/migrations/
 !backend/prisma/migrations/.gitkeep
-
-# Uploads
-uploads/
-
-# Root stubs
-/main.py
-/requirements.txt

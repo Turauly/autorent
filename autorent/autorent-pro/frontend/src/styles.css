@@ -1,0 +1,745 @@
+﻿:root {
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  color: #0f1c2b;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.25), transparent 45%),
+    radial-gradient(circle at 100% 20%, rgba(59, 130, 246, 0.2), transparent 45%),
+    linear-gradient(160deg, #f4f9ff 0%, #ecf5f3 45%, #f8fbff 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #112035;
+}
+
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 22px;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(130deg, #0f766e 0%, #1d4ed8 55%, #0f172a 100%);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.28), transparent 26%),
+    radial-gradient(circle at 85% 80%, rgba(250, 204, 21, 0.2), transparent 30%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px;
+  color: #f8fbff;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 0.4px;
+}
+
+.hero p {
+  margin: 6px 0;
+  opacity: 0.95;
+}
+
+.hero small {
+  opacity: 0.82;
+}
+
+.hero-controls {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.user-chip {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: grid;
+  gap: 2px;
+  min-width: 220px;
+}
+
+.user-chip small {
+  opacity: 0.95;
+}
+
+.notif-badge {
+  display: inline-block;
+  background: rgba(250, 204, 21, 0.22);
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(178, 196, 221, 0.45);
+  border-radius: 18px;
+  backdrop-filter: blur(9px);
+}
+
+.section-panel {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.auth-card {
+  padding: 16px;
+}
+
+.demo-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.panel-tag {
+  display: inline-block;
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: #2563eb;
+  background: #dbeafe;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+}
+
+.panel-subtitle {
+  margin: 0;
+  color: #48617a;
+}
+
+.form-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.tiny-note {
+  margin-top: 10px;
+  color: #5f6f84;
+  font-size: 0.9rem;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stat-card {
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(160deg, #ffffff, #edf5ff);
+  border: 1px solid #d5e4fb;
+}
+
+.stat-card p {
+  margin: 0;
+  color: #60708a;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.25rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.audit-filters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.timeline-filters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.request-filters {
+  grid-template-columns: minmax(220px, 320px);
+}
+
+.users-filters {
+  grid-template-columns: minmax(280px, 420px);
+}
+
+.rental-filters {
+  grid-template-columns: minmax(180px, 260px);
+}
+
+.charging-filters {
+  grid-template-columns: 1fr 1fr minmax(220px, 280px);
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.top-cars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.trend-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  margin-bottom: 12px;
+  border: 1px solid #d8e3f5;
+  border-radius: 12px;
+  padding: 10px;
+  background: #f8fbff;
+}
+
+.trend-item {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.trend-bar {
+  width: 24px;
+  border-radius: 8px 8px 4px 4px;
+  background: linear-gradient(180deg, #2563eb, #0f766e);
+}
+
+.trend-item span {
+  font-size: 0.78rem;
+  color: #4b607b;
+}
+
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #b7c7e6;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin: 0;
+}
+
+.booking-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #d5e4fb;
+  background: #f8fbff;
+}
+
+.booking-form h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.booking-preview {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #edf6ff;
+  color: #284766;
+}
+
+.workspace-switch {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 8px;
+  margin: 4px 0 14px;
+  background: #e9f0ff;
+  border-radius: 12px;
+  padding: 5px;
+}
+
+.workspace-switch button {
+  min-width: 120px;
+}
+
+input,
+select,
+button {
+  border: 1px solid #b7c7e6;
+  border-radius: 11px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.textarea {
+  min-height: 100px;
+  border: 1px solid #b7c7e6;
+  border-radius: 11px;
+  padding: 10px 12px;
+  font: inherit;
+  resize: vertical;
+}
+
+input,
+select {
+  background: #ffffff;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(140deg, #0f766e, #1d4ed8);
+  color: #fff;
+  font-weight: 600;
+}
+
+button.soft {
+  background: #e2e8f0;
+  color: #1f2937;
+}
+
+button.active {
+  background: linear-gradient(140deg, #0f172a, #2563eb);
+  color: #fff;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.cars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.charging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.charging-map {
+  position: relative;
+  height: 280px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #dbe5f4;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.18), transparent 18%),
+    radial-gradient(circle at 75% 35%, rgba(37, 99, 235, 0.18), transparent 20%),
+    linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
+}
+
+.leaflet-map {
+  width: 100%;
+  height: 100%;
+}
+
+.map-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.car-card {
+  border-radius: 14px;
+  padding: 10px;
+  background: #fcfdff;
+  border: 1px solid #dbe5f4;
+  box-shadow: 0 8px 20px rgba(16, 40, 80, 0.06);
+  transition: transform 0.18s ease;
+}
+
+.car-card:hover {
+  transform: translateY(-3px);
+}
+
+.car-card h3 {
+  margin: 8px 0 6px;
+}
+
+.car-card p {
+  margin: 4px 0;
+  color: #43566f;
+}
+
+.service-note {
+  font-size: 0.88rem;
+  color: #516684;
+}
+
+.car-photo {
+  width: 100%;
+  height: 150px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #dce7fa;
+}
+
+.pill-row {
+  display: flex;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.pill {
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  background: #e8eef9;
+  color: #334155;
+  display: inline-block;
+}
+
+.ev-pill {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-available {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-rented {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-service {
+  background: #fef9c3;
+  color: #92400e;
+}
+
+.doc-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.5fr;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid #e5eefc;
+  padding: 9px 0;
+}
+
+.doc-row a {
+  color: #1d4ed8;
+  word-break: break-all;
+}
+
+.overview-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.support-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.timeline-row {
+  grid-template-columns: 1.2fr 1.3fr 1fr 0.8fr 0.7fr;
+}
+
+.rental-row {
+  grid-template-columns: 0.5fr 1.2fr 0.8fr 0.8fr 0.8fr;
+}
+
+.admin-rental-row {
+  grid-template-columns: 0.4fr 0.8fr 0.8fr 1fr 0.7fr 0.6fr 0.7fr;
+}
+
+.charging-row {
+  grid-template-columns: 0.5fr 1fr 1fr 0.8fr 0.7fr 0.8fr;
+}
+
+.charging-booking-row {
+  grid-template-columns: 0.5fr 1fr 0.8fr 0.8fr 0.7fr 0.7fr 0.7fr;
+}
+
+.notification-card small {
+  display: block;
+  color: #60708a;
+  margin-bottom: 8px;
+}
+
+.request-card {
+  border: 1px solid #dbe5f4;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.user-card button {
+  margin-top: 8px;
+}
+
+.request-card p {
+  margin: 6px 0;
+}
+
+.request-controls {
+  display: grid;
+  grid-template-columns: 180px 1fr 110px;
+  gap: 8px;
+}
+
+.request-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.request-head p {
+  margin: 0;
+}
+
+.request-bulk {
+  display: grid;
+  grid-template-columns: 0.6fr 0.8fr 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.chat-box {
+  border: 1px solid #d8e3f5;
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 10px;
+  max-height: 280px;
+  overflow: auto;
+  margin-bottom: 10px;
+}
+
+.chat-row {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.chat-row span {
+  font-size: 0.78rem;
+  color: #4f637f;
+}
+
+.chat-row p {
+  margin: 0;
+}
+
+.chat-admin p {
+  color: #1d4ed8;
+}
+
+.chat-user p {
+  color: #0f766e;
+}
+
+.chat-send {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 8px;
+}
+
+.pagination {
+  margin-top: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-banner {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #065f46;
+  background: #d1fae5;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.warning-banner {
+  margin: 0 0 10px;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #991b1b;
+  background: #fee2e2;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.empty-note {
+  color: #53657d;
+  background: #eef4ff;
+  border: 1px dashed #c3d3ef;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.lang-switch {
+  display: inline-flex;
+  gap: 6px;
+}
+
+@media (max-width: 990px) {
+  .hero-content {
+    flex-direction: column;
+  }
+
+  .hero-controls {
+    justify-items: stretch;
+    width: 100%;
+  }
+
+  .stats-grid,
+  .filters-grid,
+  .admin-form,
+  .booking-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .request-bulk {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chat-send {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-filters,
+  .request-filters,
+  .users-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .doc-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding: 12px;
+  }
+
+  .auth-grid,
+  .stats-grid,
+  .admin-form,
+  .booking-form {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-row {
+    flex-direction: column;
+  }
+
+  .mobile-only {
+    display: inline-flex;
+  }
+
+  .filters-grid {
+    display: none;
+  }
+
+  .filters-grid.is-open {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-filters,
+  .request-filters,
+  .users-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .request-bulk {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-switch {
+    width: 100%;
+    grid-auto-flow: row;
+  }
+
+  .workspace-switch button {
+    width: 100%;
+  }
+}
+
