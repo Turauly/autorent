@@ -5,10 +5,11 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect, text
 
+from app.core.config import CORS_ORIGINS
 from app.database import Base, SessionLocal, engine
 from app.models import (  # noqa: F401
     audit_log,
@@ -28,6 +29,7 @@ from app.models import (  # noqa: F401
     user_document,
     waitlist_entry,
 )
+from app.monitoring import record_request, render_metrics
 from app.routers import admin, auth, cars, charging, chat, profile, rentals
 
 logging.basicConfig(
@@ -104,8 +106,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials="*" not in CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -202,10 +204,12 @@ async def log_requests(request: Request, call_next):
     started = time.perf_counter()
     response = await call_next(request)
     duration_ms = (time.perf_counter() - started) * 1000
+    path = request.scope.get("path", request.url.path)
+    record_request(request.method, path, response.status_code, duration_ms)
     logger.info(
         "%s %s -> %s (%.2f ms)",
         request.method,
-        request.url.path,
+        path,
         response.status_code,
         duration_ms,
     )
@@ -237,3 +241,14 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 @app.get("/")
 def root():
     return {"message": "AutoRent API is running"}
+
+
+@app.get("/healthz")
+def healthcheck():
+    return {"status": "ok"}
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+def metrics():
+    return render_metrics()
+

@@ -6,25 +6,25 @@
 
 Төмендегі талаптар жобаға міндетті түрде енгізіледі:
 
-- [ ] Пайдаланушы аутентификациясы: тіркелу, кіру, шығу
-- [ ] Рөлдер: `user` және `admin`
-- [ ] Тақырыптың негізгі функционалдығы (автокөлік, жалдау, қайтару, қолжетімділік)
-- [ ] Админ-панель (контент/анықтамалықтарды басқару)
-- [ ] Адаптивті интерфейс (desktop + mobile)
-- [ ] Дерекқормен интеграция
-- [ ] Frontend пен Backend арасында RESTful API
-- [ ] Клиенттік және серверлік валидация, error handling
-- [ ] Іздеу және сүзгілеу
-- [ ] Сұрыптау және пагинация
-- [ ] Логирование және мониторинг
-- [ ] Автоматтандырылған тесттер (unit + integration)
-- [ ] Қауіпсіздік: пароль хэштеу, sanitization, SQLi/XSS/CSRF қорғаныс
-- [ ] Cloud deploy (Render/AWS/Azure және т.б.)
-- [ ] Құжаттама: architecture, API docs, setup, user guide
-- [ ] Docker (`Dockerfile` + `docker-compose`)
-- [ ] CI/CD pipeline (GitHub Actions/GitLab CI)
-- [ ] Мониторинг стегі (Prometheus/Grafana/ELK немесе балама)
-- [ ] Жүктемелік тест (k6/JMeter немесе балама)
+- [x] Пайдаланушы аутентификациясы: тіркелу, кіру, шығу
+- [x] Рөлдер: `user` және `admin`
+- [x] Тақырыптың негізгі функционалдығы (автокөлік, жалдау, қайтару, қолжетімділік)
+- [x] Админ-панель (контент/анықтамалықтарды басқару)
+- [x] Адаптивті интерфейс (desktop + mobile)
+- [x] Дерекқормен интеграция
+- [x] Frontend пен Backend арасында RESTful API
+- [x] Клиенттік және серверлік валидация, error handling
+- [x] Іздеу және сүзгілеу
+- [x] Сұрыптау және пагинация
+- [x] Логирование және мониторинг
+- [x] Автоматтандырылған тесттер (unit + integration)
+- [x] Қауіпсіздік: пароль хэштеу, CORS баптауы, SQLAlchemy ORM арқылы SQLi тәуекелін азайту, React auto-escaping
+- [x] Cloud deploy (Render blueprint + deploy hook workflow)
+- [x] Құжаттама: architecture, API docs, setup, user guide
+- [x] Docker (`Dockerfile` + `docker-compose`)
+- [x] CI/CD pipeline (GitHub Actions/GitLab CI)
+- [x] Мониторинг стегі (Prometheus/Grafana)
+- [x] Жүктемелік тест (k6)
 
 ## 2) 15 апталық roadmap және бағалау
 
@@ -86,7 +86,7 @@
 
 - Backend: FastAPI + SQLAlchemy + JWT
 - DB: PostgreSQL
-- Infra: Docker, CI/CD
+- Infra: Docker, CI/CD, Render, Prometheus, Grafana
 - Tests: pytest + integration tests + k6
 - Monitoring: Prometheus + Grafana
 
@@ -106,10 +106,13 @@
 ## Docker
 
 - Run all services: `docker compose up --build`
+- Prometheus: `http://127.0.0.1:9090`
+- Grafana: `http://127.0.0.1:3000` (`admin/admin`)
 
 ## CI/CD
 
 - GitHub Actions workflow: `.github/workflows/ci.yml`
+- Delivery workflow: `.github/workflows/delivery.yml`
 - Backend pipeline:
   - install Python 3.12 dependencies
   - run `ruff check .`
@@ -117,9 +120,10 @@
 - Frontend pipeline:
   - install Node.js 20 dependencies with `npm ci`
   - run `npm run build`
-- Current status:
-  - CI is implemented for build/test validation
-  - automated deploy will be added in the next stage (week 14)
+- Delivery pipeline:
+  - starts backend service
+  - runs k6 smoke suite
+  - triggers Render deploy hooks for backend/frontend if secrets are configured
 
 ## Migrations (Alembic)
 
@@ -134,6 +138,27 @@
 - Install: `npm install`
 - Start: `npm run dev`
 - URL: `http://127.0.0.1:5173`
+
+## Monitoring
+
+- Metrics endpoint: `http://127.0.0.1:8000/metrics`
+- Health endpoint: `http://127.0.0.1:8000/healthz`
+- Grafana dashboard provisioning: `monitoring/grafana/`
+- Prometheus config: `monitoring/prometheus/prometheus.yml`
+
+## Load Testing
+
+- Smoke suite: `loadtests/smoke.js`
+- Extended suite: `loadtests/auth-and-listing.js`
+
+## Deploy
+
+- Render blueprint: `render.yaml`
+- Required GitHub secrets for auto-deploy:
+  - `RENDER_API_DEPLOY_HOOK`
+  - `RENDER_FRONTEND_DEPLOY_HOOK`
+- One-time manual step:
+  - confirm final Render service URLs and set `VITE_API_URL` if service names change
 
 ## Email Delivery
 

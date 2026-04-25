@@ -1,0 +1,81 @@
+name: Delivery
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  loadtest:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: autorent
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: autorent/requirements.txt
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+
+      - name: Start backend API
+        run: |
+          nohup python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2>&1 &
+
+      - name: Wait for health check
+        run: |
+          python - <<'PY'
+          import time
+          import urllib.request
+
+          url = "http://127.0.0.1:8000/healthz"
+          deadline = time.time() + 60
+          while time.time() < deadline:
+              try:
+                  with urllib.request.urlopen(url, timeout=5) as response:
+                      if response.status == 200:
+                          raise SystemExit(0)
+              except Exception:
+                  time.sleep(2)
+          raise SystemExit("Backend did not become healthy in time.")
+          PY
+
+      - name: Run k6 smoke suite
+        run: |
+          docker run --rm --add-host=host.docker.internal:host-gateway -e BASE_URL=http://host.docker.internal:8000 -v "$PWD/loadtests:/scripts" grafana/k6 run /scripts/smoke.js
+
+      - name: Upload backend log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: delivery-backend-log
+          path: autorent/uvicorn.log
+
+  deploy_backend:
+    needs: loadtest
+    if: ${{ github.event_name == 'push' && secrets.RENDER_API_DEPLOY_HOOK != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render backend deploy
+        env:
+          RENDER_API_DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+        run: curl --fail --silent --show-error --request POST "$RENDER_API_DEPLOY_HOOK"
+
+  deploy_frontend:
+    needs: loadtest
+    if: ${{ github.event_name == 'push' && secrets.RENDER_FRONTEND_DEPLOY_HOOK != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render frontend deploy
+        env:
+          RENDER_FRONTEND_DEPLOY_HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+        run: curl --fail --silent --show-error --request POST "$RENDER_FRONTEND_DEPLOY_HOOK"
