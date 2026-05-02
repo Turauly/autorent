@@ -36,6 +36,7 @@ import {
   updateUserBlacklist,
   uploadMyDocument
 } from "./api";
+import { createTourRequest, listTourRequests } from "./firestore";
 import type {
   AdminOverview,
   AuditLog,
@@ -45,6 +46,7 @@ import type {
   Expense,
   Rental,
   RentalTimelineItem,
+  TourRequest,
   User,
   UserDocument,
   WaitlistEntry
@@ -52,15 +54,91 @@ import type {
 
 type StatusFilter = "all" | "available" | "rented" | "service";
 type CategoryFilter = "all" | "econom" | "budget" | "comfort" | "lux";
-type AdminView = "fleet" | "ops" | "audit" | "users" | "rentals" | "chat";
-type ClientView = "fleet" | "rentals" | "docs" | "support";
+type AdminView = "fleet" | "ops" | "audit" | "users" | "rentals" | "chat" | "tourRequests";
+type ClientView = "fleet" | "rentals" | "docs" | "support" | "tours";
 type SortBy = "price_per_day" | "year" | "brand";
 type SortOrder = "asc" | "desc";
 type RequestStatus = "open" | "in_progress" | "resolved" | "rejected";
 type Lang = "kz" | "ru";
+type TourPackage = {
+  id: string;
+  titleKz: string;
+  titleRu: string;
+  routeKz: string;
+  routeRu: string;
+  days: number;
+  price: number;
+  carClassKz: string;
+  carClassRu: string;
+  perksKz: string[];
+  perksRu: string[];
+};
 
 const TOKEN_KEY = "autorent_token";
 const LANG_KEY = "autorent_lang";
+const TOUR_PACKAGES: TourPackage[] = [
+  {
+    id: "almaty-lakes",
+    titleKz: "Алматы көлдері уикенді",
+    titleRu: "Уикенд по озерам Алматы",
+    routeKz: "Алматы - Қапшағай - Көлсай - Қайыңды - Алматы",
+    routeRu: "Алматы - Капшагай - Кольсай - Каинды - Алматы",
+    days: 3,
+    price: 145000,
+    carClassKz: "Comfort SUV",
+    carClassRu: "Comfort SUV",
+    perksKz: ["Көлік + сақтандыру", "Маршрут жоспары", "Фото-тоқтау нүктелері", "24/7 қолдау"],
+    perksRu: ["Авто + страховка", "План маршрута", "Фото-точки", "Поддержка 24/7"]
+  },
+  {
+    id: "turkistan-family",
+    titleKz: "Түркістан family road trip",
+    titleRu: "Семейный road trip в Туркестан",
+    routeKz: "Шымкент - Түркістан - Отырар - Арыстанбаб - Шымкент",
+    routeRu: "Шымкент - Туркестан - Отрар - Арыстанбаб - Шымкент",
+    days: 2,
+    price: 98000,
+    carClassKz: "Minivan",
+    carClassRu: "Minivan",
+    perksKz: ["Отбасылық пакет", "Балаларға ыңғайлы көлік", "Гидсіз еркін саяхат", "Қонақүй ұсыныстары"],
+    perksRu: ["Семейный пакет", "Комфортное авто для детей", "Свободная поездка без гида", "Подборка отелей"]
+  },
+  {
+    id: "astana-burabay",
+    titleKz: "Астана - Бурабай premium",
+    titleRu: "Астана - Бурабай premium",
+    routeKz: "Астана - Щучинск - Бурабай - Астана",
+    routeRu: "Астана - Щучинск - Боровое - Астана",
+    days: 2,
+    price: 132000,
+    carClassKz: "Business sedan",
+    carClassRu: "Business sedan",
+    perksKz: ["Premium трансфер стилі", "Кофе-тоқтау картасы", "Чек-лист маршрут", "Ерте бронь жеңілдігі"],
+    perksRu: ["Стиль premium-трансфера", "Карта coffee stop", "Чек-лист маршрута", "Скидка за раннее бронирование"]
+  }
+];
+const STARTUP_IDEAS = [
+  {
+    kz: "Dynamic package builder: клиент күн санын, қаланы, көлік класын таңдап, баға автоматты жиналсын.",
+    ru: "Dynamic package builder: клиент выбирает город, дни и класс авто, а цена собирается автоматически."
+  },
+  {
+    kz: "Partner marketplace: қонақүй, кафе, экскурсия, жанармай бекеті бойынша серіктес ұсыныстар қосу.",
+    ru: "Partner marketplace: добавить партнерские предложения отелей, кафе, экскурсий и АЗС."
+  },
+  {
+    kz: "Travel concierge subscription: ай сайынғы жазылыммен VIP support, маршрут update, airport pickup ұсыну.",
+    ru: "Travel concierge subscription: ежемесячная подписка с VIP support, обновлением маршрута и airport pickup."
+  },
+  {
+    kz: "User-generated routes: клиенттер өз маршрутын жариялап, рейтинг жинайтын community модуль.",
+    ru: "User-generated routes: community-модуль, где клиенты публикуют свои маршруты и получают рейтинг."
+  },
+  {
+    kz: "Corporate getaway packs: компанияларға тимбилдинг және оффсайт пакет сату.",
+    ru: "Corporate getaway packs: продавать компаниям пакеты для тимбилдинга и оффсайта."
+  }
+];
 
 function formatMoney(v: number) {
   return `${Math.round(v).toLocaleString()} тг`;
@@ -129,6 +207,115 @@ function getRequestStatusLabel(status: RequestStatus, lang: Lang) {
   if (status === "in_progress") return tr(lang, "Өңделуде", "В работе");
   if (status === "resolved") return tr(lang, "Шешілді", "Решено");
   return tr(lang, "Қабылданбады", "Отклонено");
+}
+
+function TourPackagesPanel({ lang, user }: { lang: Lang; user: User }) {
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const submitTourRequest = async (tour: TourPackage) => {
+    setSubmittingId(tour.id);
+    setMessage(null);
+    setError(null);
+    try {
+      await createTourRequest({
+        packageId: tour.id,
+        packageTitle: lang === "kz" ? tour.titleKz : tour.titleRu,
+        route: lang === "kz" ? tour.routeKz : tour.routeRu,
+        days: tour.days,
+        price: tour.price,
+        userId: user.id,
+        userEmail: user.email,
+        userFullName: user.full_name,
+        userPhone: user.phone
+      });
+      setMessage(tr(lang, "Сұраныс Firestore-ға сақталды", "Заявка сохранена в Firestore"));
+    } catch (err) {
+      setError(
+        apiErrorMessage(
+          err,
+          tr(
+            lang,
+            "Firestore баптауы жоқ немесе сұраныс сақталмады",
+            "Нет настройки Firestore или заявка не сохранилась"
+          )
+        )
+      );
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
+  return (
+    <section className="panel section-panel">
+      <div className="section-head">
+        <div>
+          <h2>{tr(lang, "Tour Packages", "Tour Packages")}</h2>
+          <p className="panel-subtitle">
+            {tr(
+              lang,
+              "Қалалар арасында көлікпен саяхатқа арналған дайын пакеттер.",
+              "Готовые пакеты для путешествий между городами на арендованных авто."
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className="stats-grid tour-stats">
+        <article className="stat-card">
+          <p>{tr(lang, "Дайын пакет", "Готовых пакетов")}</p>
+          <strong>{TOUR_PACKAGES.length}</strong>
+        </article>
+        <article className="stat-card">
+          <p>{tr(lang, "Орташа чек", "Средний чек")}</p>
+          <strong>{formatMoney(TOUR_PACKAGES.reduce((acc, row) => acc + row.price, 0) / TOUR_PACKAGES.length)}</strong>
+        </article>
+        <article className="stat-card">
+          <p>{tr(lang, "Фокус", "Фокус")}</p>
+          <strong>{tr(lang, "Road trip", "Road trip")}</strong>
+        </article>
+      </div>
+      {message && <p className="info-banner">{message}</p>}
+      {error && <p className="error">{error}</p>}
+
+      <div className="tour-grid">
+        {TOUR_PACKAGES.map((tour) => (
+          <article key={tour.id} className="tour-card">
+            <span className="panel-tag">{tour.days} {tr(lang, "күн", "дня")}</span>
+            <h3>{lang === "kz" ? tour.titleKz : tour.titleRu}</h3>
+            <p className="tour-route">{lang === "kz" ? tour.routeKz : tour.routeRu}</p>
+            <div className="doc-row tour-meta">
+              <span>{tr(lang, "Ұсынылатын көлік", "Рекомендуемое авто")}: {lang === "kz" ? tour.carClassKz : tour.carClassRu}</span>
+              <span>{tr(lang, "Баға", "Цена")}: {formatMoney(tour.price)}</span>
+            </div>
+            <ul className="tour-list">
+              {(lang === "kz" ? tour.perksKz : tour.perksRu).map((perk) => (
+                <li key={perk}>{perk}</li>
+              ))}
+            </ul>
+            <button onClick={() => void submitTourRequest(tour)} disabled={submittingId === tour.id}>
+              {submittingId === tour.id
+                ? tr(lang, "Жіберілуде...", "Отправка...")
+                : tr(lang, "Пакетке сұраныс жіберу", "Отправить запрос на пакет")}
+            </button>
+          </article>
+        ))}
+      </div>
+
+      <div className="tour-ideas">
+        <h3>{tr(lang, "Стартап ретінде қосатын идеялар", "Идеи для стартап-роста")}</h3>
+        <div className="ideas-grid">
+          {STARTUP_IDEAS.map((idea) => (
+            <article key={idea.kz} className="idea-card">
+              <strong>{tr(lang, "Growth idea", "Growth idea")}</strong>
+              <p>{lang === "kz" ? idea.kz : idea.ru}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function LoginView({ onLogin, lang }: { onLogin: (email: string, password: string) => Promise<void>; lang: Lang }) {
@@ -1041,6 +1228,79 @@ function AdminOverviewPanel({ lang }: { lang: Lang }) {
   );
 }
 
+function AdminTourRequestsPanel({ lang }: { lang: Lang }) {
+  const [requests, setRequests] = useState<TourRequest[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadRequests = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setRequests(await listTourRequests());
+    } catch (err) {
+      setError(
+        apiErrorMessage(
+          err,
+          tr(lang, "Firestore сұраныстары жүктелмеді", "Заявки Firestore не загрузились")
+        )
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadRequests();
+  }, []);
+
+  return (
+    <section className="panel section-panel">
+      <div className="section-head">
+        <div>
+          <h2>{tr(lang, "Tour сұраныстары", "Tour заявки")}</h2>
+          <p className="panel-subtitle">
+            {tr(
+              lang,
+              "Firestore ішіндегі tour package сұраныстары.",
+              "Заявки на tour package из Firestore."
+            )}
+          </p>
+        </div>
+        <button className="soft" onClick={() => void loadRequests()}>
+          {tr(lang, "Жаңарту", "Обновить")}
+        </button>
+      </div>
+      {error && <p className="error">{error}</p>}
+      {loading && <p className="empty-note">{tr(lang, "Жүктелуде...", "Загрузка...")}</p>}
+      {!loading && !requests.length && (
+        <p className="empty-note">{tr(lang, "Сұраныс жоқ", "Заявок пока нет")}</p>
+      )}
+      {requests.map((row) => (
+        <article key={row.id} className="request-card">
+          <div className="doc-row">
+            <strong>{row.packageTitle}</strong>
+            <span>{formatMoney(row.price)}</span>
+          </div>
+          <p>{row.route}</p>
+          <div className="pill-row">
+            <span className="pill">{row.days} {tr(lang, "күн", "дня")}</span>
+            <span className="pill">{row.status}</span>
+            <span className="pill">{row.source}</span>
+          </div>
+          <p>{tr(lang, "Клиент", "Клиент")}: {row.userFullName || row.userEmail}</p>
+          <p>Email: {row.userEmail}</p>
+          {row.userPhone && <p>{tr(lang, "Телефон", "Телефон")}: {row.userPhone}</p>}
+          <p>
+            {tr(lang, "Жасалған уақыты", "Создано")}:{" "}
+            {row.createdAt ? new Date(row.createdAt).toLocaleString() : "-"}
+          </p>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 function AdminUsersPanel({ me, lang }: { me: User; lang: Lang }) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1355,6 +1615,7 @@ function AdminWorkspace({ me, lang }: { me: User; lang: Lang }) {
         <button className={view === "ops" ? "active" : ""} onClick={() => setView("ops")}>{tr(lang, "Аналитика", "Аналитика")}</button>
         <button className={view === "fleet" ? "active" : ""} onClick={() => setView("fleet")}>{tr(lang, "Автопарк", "Автопарк")}</button>
         <button className={view === "rentals" ? "active" : ""} onClick={() => setView("rentals")}>{tr(lang, "Броньдар", "Брони")}</button>
+        <button className={view === "tourRequests" ? "active" : ""} onClick={() => setView("tourRequests")}>{tr(lang, "Tour заявки", "Tour заявки")}</button>
         <button className={view === "chat" ? "active" : ""} onClick={() => setView("chat")}>{tr(lang, "Чат", "Чат")}</button>
         <button className={view === "audit" ? "active" : ""} onClick={() => setView("audit")}>{tr(lang, "Аудит", "Аудит")}</button>
         <button className={view === "users" ? "active" : ""} onClick={() => setView("users")}>{tr(lang, "Қолданушылар", "Пользователи")}</button>
@@ -1362,6 +1623,7 @@ function AdminWorkspace({ me, lang }: { me: User; lang: Lang }) {
       {view === "ops" && <AdminOverviewPanel lang={lang} />}
       {view === "fleet" && <CarsGrid adminMode lang={lang} />}
       {view === "rentals" && <AdminRentalsPanel lang={lang} />}
+      {view === "tourRequests" && <AdminTourRequestsPanel lang={lang} />}
       {view === "chat" && <AdminChatPanel lang={lang} />}
       {view === "audit" && <AuditPanel lang={lang} />}
       {view === "users" && <AdminUsersPanel me={me} lang={lang} />}
@@ -1369,17 +1631,19 @@ function AdminWorkspace({ me, lang }: { me: User; lang: Lang }) {
   );
 }
 
-function ClientWorkspace({ lang }: { lang: Lang }) {
+function ClientWorkspace({ lang, user }: { lang: Lang; user: User }) {
   const [view, setView] = useState<ClientView>("fleet");
   return (
     <>
       <div className="workspace-switch">
         <button className={view === "fleet" ? "active" : ""} onClick={() => setView("fleet")}>{tr(lang, "Автопарк", "Автопарк")}</button>
+        <button className={view === "tours" ? "active" : ""} onClick={() => setView("tours")}>{tr(lang, "Тур пакеттер", "Тур-пакеты")}</button>
         <button className={view === "rentals" ? "active" : ""} onClick={() => setView("rentals")}>{tr(lang, "Менің броньдарым", "Мои брони")}</button>
         <button className={view === "docs" ? "active" : ""} onClick={() => setView("docs")}>{tr(lang, "Құжаттар", "Документы")}</button>
         <button className={view === "support" ? "active" : ""} onClick={() => setView("support")}>{tr(lang, "Қолдау", "Поддержка")}</button>
       </div>
       {view === "fleet" && <CarsGrid adminMode={false} lang={lang} onBooked={() => setView("rentals")} />}
+      {view === "tours" && <TourPackagesPanel lang={lang} user={user} />}
       {view === "rentals" && <MyRentalsPanel lang={lang} />}
       {view === "docs" && <DocumentsPanel lang={lang} />}
       {view === "support" && <ClientRequestsPanel lang={lang} />}
@@ -1444,7 +1708,7 @@ export default function App() {
       ) : (
         <Routes>
           <Route path="/" element={me ? <Navigate to={me.role === "admin" ? "/admin" : "/client"} replace /> : <LoginView onLogin={onLogin} lang={lang} />} />
-          <Route path="/client" element={me?.role === "user" ? <ClientWorkspace lang={lang} /> : <Navigate to="/" replace />} />
+          <Route path="/client" element={me?.role === "user" ? <ClientWorkspace lang={lang} user={me} /> : <Navigate to="/" replace />} />
           <Route path="/admin" element={me?.role === "admin" ? <AdminWorkspace me={me} lang={lang} /> : <Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

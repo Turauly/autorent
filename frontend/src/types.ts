@@ -174,3 +174,19 @@ export type ChatMessage = {
   message: string;
   created_at: string;
 };
+
+export type TourRequest = {
+  id: string;
+  packageId: string;
+  packageTitle: string;
+  route: string;
+  days: number;
+  price: number;
+  userId: number;
+  userEmail: string;
+  userFullName?: string | null;
+  userPhone?: string | null;
+  source: string;
+  status: string;
+  createdAt: string | null;
+};
